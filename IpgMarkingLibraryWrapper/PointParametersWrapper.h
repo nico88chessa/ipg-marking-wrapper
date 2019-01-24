@@ -4,19 +4,15 @@
 
 namespace ipg_marking_library_wrapper {
 
-    class PointParametersPrivate;
+    class PointParametersWrapperPrivate;
 
-    class IPGMARKINGLIBRARYWRAPPER_API PointParameters {
+    class IPGMARKINGLIBRARYWRAPPER_API PointParametersWrapper {
     private:
-        PointParametersPrivate* dPtr;
-    
-    private:
-        PointParameters();
+        PointParametersWrapperPrivate* dPtr;
 
     public:
-        PointParameters(unsigned int);
-        PointParameters(PointParameters&& copy);
-        ~PointParameters();
+        PointParametersWrapper(void* ptr);
+        ~PointParametersWrapper();
 
         void addLaserEntry(float, float, float, int);
         void clearLaserEntries();
@@ -30,10 +26,6 @@ namespace ipg_marking_library_wrapper {
         void setMode(int v);
         float getVelocity();
         void setVelocity(float v);
-
-        void* getManagedObject();
-        void releaseManagedObject();
-        
     };
 
 }

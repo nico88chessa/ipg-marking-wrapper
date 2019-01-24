@@ -5,9 +5,8 @@
 namespace ipg_marking_library_wrapper {
     
     class PointPrivate;
-    
-    class IPGMARKINGLIBRARYWRAPPER_API Point {
 
+    class IPGMARKINGLIBRARYWRAPPER_API Point {
     private:
         PointPrivate* dPtr;
 
@@ -27,8 +26,10 @@ namespace ipg_marking_library_wrapper {
         float getZ() const;
         void setZ(float z);
 
-        void* getManagedObject();
-        void releaseManagedObject();
+        void* getManagedPtr();
+        void releaseManagedPtr();
+
+        //void collect();
         
     };
 

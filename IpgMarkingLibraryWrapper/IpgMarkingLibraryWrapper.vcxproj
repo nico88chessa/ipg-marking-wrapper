@@ -162,10 +162,14 @@
     <ClInclude Include="Enums.h" />
     <ClInclude Include="IpgmlDef.h" />
     <ClInclude Include="OutputPointsProperties.h" />
+    <ClInclude Include="OutputPointsPropertiesWrapper.h" />
     <ClInclude Include="OutputVectorsProperties.h" />
+    <ClInclude Include="OutputVectorsPropertiesWrapper.h" />
     <ClInclude Include="PointList.h" />
     <ClInclude Include="PointParameters.h" />
     <ClInclude Include="Point.h" />
+    <ClInclude Include="PointParametersWrapper.h" />
+    <ClInclude Include="PointWrapper.h" />
     <ClInclude Include="ScannerInfo.h" />
     <ClInclude Include="Scanner.h" />
     <ClInclude Include="stdafx.h" />
@@ -174,10 +178,14 @@
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="OutputPointsProperties.cpp" />
+    <ClCompile Include="OutputPointsPropertiesWrapper.cpp" />
     <ClCompile Include="OutputVectorsProperties.cpp" />
+    <ClCompile Include="OutputVectorsPropertiesWrapper.cpp" />
     <ClCompile Include="PointList.cpp" />
     <ClCompile Include="PointParameters.cpp" />
     <ClCompile Include="Point.cpp" />
+    <ClCompile Include="PointParametersWrapper.cpp" />
+    <ClCompile Include="PointWrapper.cpp" />
     <ClCompile Include="ScannerInfo.cpp" />
     <ClCompile Include="Scanner.cpp" />
     <ClCompile Include="stdafx.cpp">

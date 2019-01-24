@@ -13,20 +13,21 @@ using namespace ipg_marking_library_wrapper;
 
 class ipg_marking_library_wrapper::PointParametersPrivate {
 public:
-    msclr::auto_gcroot<ipgml::PointParameters^> _pointParameters;
+    msclr::auto_gcroot<ipgml::PointParameters^> _pp;
     GCHandle handle;
 
 public:
+    PointParametersPrivate() { }
+
     PointParametersPrivate(unsigned int v) {
-        _pointParameters = gcnew ipgml::PointParameters(v);
+        _pp = gcnew ipgml::PointParameters(v);
     }
-    PointParametersPrivate(ipgml::PointParameters^ other) {
-        _pointParameters = other;
-    }
-    ~PointParametersPrivate() {
-    }
+
+    ~PointParametersPrivate() { }
+
     void* getManaged() {
-        handle = GCHandle::Alloc(_pointParameters.get());
+        if (!handle.IsAllocated)
+            handle = GCHandle::Alloc(_pp.get());
         void* obj = GCHandle::ToIntPtr(handle).ToPointer();
         return obj;
     }
@@ -35,14 +36,12 @@ public:
         if (handle.IsAllocated)
             handle.Free();
     }
+
 };
 
 
-PointParameters::PointParameters(void* other) {
-    IntPtr pointer(other);
-    GCHandle handle = GCHandle::FromIntPtr(pointer);
-    ipgml::PointParameters^ obj = (ipgml::PointParameters^)handle.Target;
-    this->dPtr = new PointParametersPrivate(obj);
+PointParameters::PointParameters() {
+    this->dPtr = new PointParametersPrivate();
 }
 
 PointParameters::PointParameters(unsigned int v) {
@@ -59,51 +58,51 @@ PointParameters::~PointParameters() {
 }
 
 void PointParameters::addLaserEntry(float dwell, float width, float powerPercent, int count) {
-    dPtr->_pointParameters->AddLaserEntry(dwell, width, powerPercent, count);
+    dPtr->_pp->AddLaserEntry(dwell, width, powerPercent, count);
 }
 
 void PointParameters::clearLaserEntries() {
-    dPtr->_pointParameters->ClearLaserEntries();
+    dPtr->_pp->ClearLaserEntries();
 }
 
 float PointParameters::getLinkError() {
-    return dPtr->_pointParameters->LinkError;
+    return dPtr->_pp->LinkError;
 }
 
 void PointParameters::setLinkError(float v) {
-    dPtr->_pointParameters->LinkError = v;
+    dPtr->_pp->LinkError = v;
 }
 
 float PointParameters::getLinkRate() {
-    return dPtr->_pointParameters->LinkRate;
+    return dPtr->_pp->LinkRate;
 }
 
 void PointParameters::setLinkRate(float v) {
-    dPtr->_pointParameters->LinkRate = v;
+    dPtr->_pp->LinkRate = v;
 }
 
 float PointParameters::getLinkSettleTc() {
-    return dPtr->_pointParameters->LinkSettleTc;
+    return dPtr->_pp->LinkSettleTc;
 }
 
 void PointParameters::setLinkSettleTc(float v) {
-    dPtr->_pointParameters->LinkSettleTc = v;
+    dPtr->_pp->LinkSettleTc = v;
 }
 
 int PointParameters::getMode() {
-    return dPtr->_pointParameters->Mode;
+    return dPtr->_pp->Mode;
 }
 
 void PointParameters::setMode(int v) {
-    dPtr->_pointParameters->Mode = v;
+    dPtr->_pp->Mode = v;
 }
 
 float PointParameters::getVelocity() {
-    return dPtr->_pointParameters->Velocity;
+    return dPtr->_pp->Velocity;
 }
 
 void PointParameters::setVelocity(float v) {
-    dPtr->_pointParameters->Velocity = v;
+    dPtr->_pp->Velocity = v;
 }
 
 void* PointParameters::getManagedObject() {

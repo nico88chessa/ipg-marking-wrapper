@@ -40,14 +40,14 @@ PointList::PointList(std::list<Point>& points) {
     auto list = gcnew System::Collections::Generic::List<ipgml::Point^>();
 
     while (!points.empty()) {
-        Point& p = points.front();
-        Point c = p;// std::move(p);
+        //Point& p = points.front();
+        Point c = points.front();
         points.pop_front();
         int x = c.getX();
         int y = c.getY();
-        GCHandle^ handle = GCHandle::FromIntPtr(IntPtr(c.getManagedObject()));
+        GCHandle^ handle = GCHandle::FromIntPtr(IntPtr(c.getManagedPtr()));
         ipgml::Point^ point = (ipgml::Point^)handle->Target;
-        c.releaseManagedObject();
+        c.releaseManagedPtr();
         
         list->Add(point);
     }
@@ -74,10 +74,9 @@ Point PointList::element(int i) {
 
     ipgml::Point^ p = dPtr->_pl->Element(i);
     GCHandle handle = GCHandle::Alloc(p);
-    Point point(GCHandle::ToIntPtr(handle).ToPointer());
+    Point res(GCHandle::ToIntPtr(handle).ToPointer());
     handle.Free();
-
-    return point;
+    return res;
 }
 
 void PointList::shift(float x, float y, float z) {

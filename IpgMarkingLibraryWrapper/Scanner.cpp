@@ -14,23 +14,47 @@ using namespace ipg_marking_library_wrapper;
 
 class ipg_marking_library_wrapper::ScannerPrivate {
 public:
-    msclr::auto_gcroot<ipgml::Scanner^> _scanner;
+    msclr::auto_gcroot<ipgml::Scanner^> _s;
     GCHandle handle;
 
 public:
     ScannerPrivate(System::String^ name, bool lock, IpgMarkingGraphicsLibrary::Units unit) {
-        _scanner = gcnew ipgml::Scanner(name, lock, unit);
-        handle = GCHandle::Alloc(_scanner);
+        _s = gcnew ipgml::Scanner(name, lock, unit);
     }
+
     ~ScannerPrivate() {
-        handle.Free();
+        unlock();
+    }
+
+    void* getManaged() {
+        if (!handle.IsAllocated)
+            handle = GCHandle::Alloc(_s.get());
+        void* obj = GCHandle::ToIntPtr(handle).ToPointer();
+        return obj;
+    }
+
+    void unlock() {
+        if (handle.IsAllocated)
+            handle.Free();
+    }
+
+};
+
+class ipg_marking_library_wrapper::PointParametersHandler {
+public:
+    GCHandle handle;
+
+    PointParametersHandler() { }
+
+    ~PointParametersHandler() {
+        if (handle.IsAllocated)
+            handle.Free();
     }
 };
 
 
 Scanner::Scanner(const std::string& name, bool lock, Units u, std::string& err) : dPtr(nullptr) {
 
-    
     isToCloseBeforeDelete = lock ? true : false;
 
     System::String^ _name = gcnew System::String(name.c_str());
@@ -55,6 +79,7 @@ Scanner::Scanner(const std::string& name, bool lock, Units u, std::string& err) 
         err = chars;
         Marshal::FreeHGlobal(IntPtr((void*)chars));
     }
+    ppHandler = new PointParametersHandler();
 
 }
 
@@ -64,14 +89,19 @@ Scanner::~Scanner() {
         this->close();
 
     delete dPtr;
+    delete ppHandler;
 }
 
 void* Scanner::getManagedObject() {
     if (dPtr == nullptr)
         return nullptr;
-    
-    return GCHandle::ToIntPtr(dPtr->handle).ToPointer();
-    
+
+    void* obj = dPtr->getManaged();
+    return obj;
+}
+
+void Scanner::releaseManagedObject() { 
+    dPtr->unlock();
 }
 
 void Scanner::close() {
@@ -79,7 +109,8 @@ void Scanner::close() {
         return;
 
     try {
-        dPtr->_scanner->Close();
+        dPtr->_s->Close();
+        isToCloseBeforeDelete = false;
     }
     catch (System::Exception^ e) {
         const char* chars = (const char*)(Marshal::StringToHGlobalAnsi(e->Message)).ToPointer();
@@ -87,11 +118,13 @@ void Scanner::close() {
     }
 }
 
-void Scanner::config(OutputPointsProperties properties, float pitch) {
+void Scanner::config(OutputPointsProperties& properties, float pitch) {
     if (dPtr == nullptr)
         return;
-
-    
+    GCHandle handle = GCHandle::FromIntPtr(IntPtr(properties.getManagedPtr()));
+    ipgml::OutputPointsProperties^ obj = (ipgml::OutputPointsProperties^)handle.Target;
+    dPtr->_s->Config(obj, pitch);
+    properties.releaseManagedPtr();
 }
 
 void Scanner::config(OutputVectorsProperties opp) {
@@ -101,7 +134,7 @@ void Scanner::exit() {
     if (dPtr == nullptr)
         return;
 
-    dPtr->_scanner->Exit();
+    dPtr->_s->Exit();
 }
 
 void Scanner::finalize() {
@@ -111,54 +144,42 @@ bool Scanner::isDone() {
     if (dPtr == nullptr)
         return true;
 
-    return dPtr->_scanner->IsDone();
+    return dPtr->_s->IsDone();
 }
 
 bool Scanner::isWaitingEvent() {
     if (dPtr == nullptr)
         return false;
 
-    return dPtr->_scanner->IsWaitingEvent();
+    return dPtr->_s->IsWaitingEvent();
 }
 
 void Scanner::lock() {
     if (dPtr == nullptr)
         return;
 
-    dPtr->_scanner->Lock();
+    dPtr->_s->Lock();
 }
-
-//void Scanner::output(PointList ^) {
-//}
-//
-//void Scanner::output(PointList ^, OutputPointsProperties ^) {
-//}
-//
-//void Scanner::output(VectorList ^) {
-//}
-//
-//void Scanner::output(VectorList ^, OutputVectorsProperties ^) {
-//}
 
 std::vector<ScannerInfo> Scanner::scanners() {
     /*if (dPtr == nullptr)
         return std::vector<ScannerInfo>();*/
 
-    /*auto test = dPtr->_scanner->Scanners();
-    Collections::Generic::List<ipgml::ScannerInfo>^ scannerList = dPtr->_scanner->Scanners();*/
+        /*auto test = dPtr->_s->Scanners();
+        Collections::Generic::List<ipgml::ScannerInfo>^ scannerList = dPtr->_s->Scanners();*/
     auto scannerList = ipgml::Scanner::Scanners();
     std::vector<ScannerInfo> list;
     //ipgml::ScannerInfo^ p = gcnew ipgml::ScannerInfo();
-    
+
     for (int i = 0; i < scannerList->Count; ++i) {
-        
+
         //p = scannerList->ToArray()[i];
         ipgml::ScannerInfo^ p = scannerList->ToArray()[i];
-        
+
         ConnectionStatus c;
         std::string name;
 
-        switch (p->ConnectionStatus) {    
+        switch (p->ConnectionStatus) {
         case ipgml::ConnectionStatus::Available: c = ConnectionStatus::AVAILABLE; break;
         case ipgml::ConnectionStatus::Busy: ConnectionStatus::BUSY; break;
         }
@@ -167,25 +188,25 @@ std::vector<ScannerInfo> Scanner::scanners() {
         Marshal::FreeHGlobal(IntPtr((void*)chars));
 
         list.push_back(ScannerInfo(c, name));
-        
+
     }
 
     return list;
-    
+
 }
 
 void Scanner::unlock() {
     if (dPtr == nullptr)
         return;
 
-    dPtr->_scanner->Unlock();
+    dPtr->_s->Unlock();
 }
 
 void Scanner::wait(float seconds) {
     if (dPtr == nullptr)
         return;
 
-    dPtr->_scanner->Wait(seconds);
+    dPtr->_s->Wait(seconds);
 }
 
 void Scanner::wait(WaitEvent we) {
@@ -201,21 +222,23 @@ void Scanner::wait(WaitEvent we) {
     case WaitEvent::StartBit: _ev = ipgml::WaitEvent::StartBit; break;
     }
 
-    dPtr->_scanner->Wait(_ev);
+    dPtr->_s->Wait(_ev);
 
 }
 
-PointParameters Scanner::getPointParameters() {
-    
-    ipgml::PointParameters^ pp = dPtr->_scanner->PointParameters;
-    GCHandle handle = GCHandle::Alloc(pp);
-    IntPtr pointer = GCHandle::ToIntPtr(handle);
-    void* ptr = pointer.ToPointer();
+PointParametersWrapper Scanner::getManagedPointParameters() {
 
-    //PointParameters* temp = new PointParameters(ptr);
-    PointParameters temp(ptr);
-    handle.Free();
-    //return std::move(temp);
+    ipgml::PointParameters^ pp = dPtr->_s->PointParameters;
+    ppHandler->handle = GCHandle::Alloc(pp);
+    IntPtr pointer = GCHandle::ToIntPtr(ppHandler->handle);
+    PointParametersWrapper temp(pointer.ToPointer());
     return temp;
+
+}
+
+void Scanner::releaseManagedPointParameters() {
+    if (ppHandler->handle.IsAllocated)
+        ppHandler->handle.Free();
+
 }
         

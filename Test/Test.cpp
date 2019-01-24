@@ -8,35 +8,57 @@
 #include "../IpgMarkingLibraryWrapper/Scanner.h"
 #include "../IpgMarkingLibraryWrapper/PointParameters.h"
 #include "../IpgMarkingLibraryWrapper/PointList.h"
+#include "../IpgMarkingLibraryWrapper/PointWrapper.h"
 
 using namespace std;
 using namespace ipg_marking_library_wrapper;
 
 int main() {
     
-    /*std::cout << "Hello World!\n";
-    auto prova = Scanner::scanners();
-    
-    std::cout << "Lista scanner\n"; 
-    string err;
-    
-    auto s = Scanner(prova[0].getName(), true, Units::MICRONS, err);
-    std::cout << "Connesso alla testa di scansione\n";
-    {
-        auto&& te = s.getPointParameters();
-        te.clearLaserEntries();
-        std::cout << "Clear laser entries\n";
-    }*/
+    //std::cout << "Hello World!\n";
+    //auto prova = Scanner::scanners();
+    //
+    //std::cout << "Lista scanner\n"; 
+    //string err;
+    //
+    //auto s = new Scanner(prova[0].getName(), true, Units::MICRONS, err);
+    //std::cout << "Connesso alla testa di scansione\n";
+    //{
+    //    auto&& te = s->getManagedPointParameters();
+    //    te.clearLaserEntries();
+    //    std::cout << "Clear laser entries\n";
+    //    s->releaseManagedPointParameters();
+    //}
+    ////s.close();
+    //
+    //OutputPointsProperties pointProperties(0.001f);
 
-    int maxX = 20;
-    int maxY = 20;
+    //s->config(pointProperties, 0.0f);
+
+    //PointParameters testPP = s->getManagedPointParameters();
+    //delete s;
+    //float le = testPP.getLinkError();
+    int maxX = 4000;
+    int maxY = 4000;
 
     std::list<Point> list;
+    Point primo(10, 10);
+    list.push_back(primo);
+    void* ptr = primo.getManagedPtr();
+    
+    std::cout << ptr << std::endl;
+    PointWrapper primoWrapped(ptr);
+
+    std::cout << "X: " << primoWrapped.getX() << " Y: " << primoWrapped.getY() << std::endl;
+    
     for (int x = 0; x < maxX; ++x) {
         for (int y = 0; y < maxY; ++y) {
-            list.push_back(Point(x, y));
+            list.push_back(Point(x,y));
         }
     }
+
+    std::cout << primo.getManagedPtr() << std::endl;
+    std::cout << "X: " << primoWrapped.getX() << " Y: " << primoWrapped.getY() << std::endl;
 
     /*int count = 0;
     for (int x = 0; x < maxX; ++x) {
@@ -47,8 +69,8 @@ int main() {
     }*/
 
     PointList listIpg(list);
-
     std::cout << "size: " << listIpg.count() << std::endl;
+    std::cout << "X: " << primoWrapped.getX() << " Y: " << primoWrapped.getY() << std::endl;
 
     //auto t2 = s.isDone();
     /*s.lock();

@@ -13,28 +13,35 @@ using namespace ipg_marking_library_wrapper;
 
 class ipg_marking_library_wrapper::PointPrivate {
 public:
-    using type = msclr::auto_gcroot<ipgml::Point^>;
-    type _point;
+    msclr::auto_gcroot<ipgml::Point^> _p;
     GCHandle handle;
 
 public:
     PointPrivate() {
-        _point = gcnew ipgml::Point();
+        _p = gcnew ipgml::Point();
     }
+
     PointPrivate(ipgml::Point^ other) {
-        _point = other;// gcnew ipgml::Point(other);
+        _p.reset((ipgml::Point^)other->Clone());
     }
+
     PointPrivate(float x, float y) {
-        _point = gcnew ipgml::Point(x, y);
+        _p = gcnew ipgml::Point(x, y);
     }
+
     PointPrivate(float x, float y, float z) {
-        _point = gcnew ipgml::Point(x, y, z);
+        _p = gcnew ipgml::Point(x, y, z);
     }
+
     ~PointPrivate() {
+        unlock();
     }
+
     void* getManaged() {
-        handle = GCHandle::Alloc(_point.get());
-        void* obj = GCHandle::ToIntPtr(handle).ToPointer();
+        if (!handle.IsAllocated)
+            handle = GCHandle::Alloc(_p.get());
+        IntPtr t(GCHandle::ToIntPtr(handle));
+        void* obj = t.ToPointer();
         return obj;
     }
 
@@ -42,6 +49,7 @@ public:
         if (handle.IsAllocated)
             handle.Free();
     }
+
 };
 
 
@@ -50,15 +58,15 @@ Point::Point() {
 }
 
 Point::Point(const Point & other) {
-    dPtr = new PointPrivate();
-    dPtr->_point = other.dPtr->_point;
+    dPtr = new PointPrivate(other.dPtr->_p.get());
 }
 
 Point::Point(void* other) {
     IntPtr pointer(other);
     GCHandle handle = GCHandle::FromIntPtr(pointer);
     ipgml::Point^ obj = (ipgml::Point^)handle.Target;
-    this->dPtr = new PointPrivate(obj);
+    this->dPtr = new PointPrivate();
+    this->dPtr->_p.reset(obj);
 }
 
 Point::Point(float x, float y) {
@@ -79,30 +87,30 @@ Point::~Point() {
 }
 
 float Point::getX() const {
-    return dPtr->_point->X;
+    return dPtr->_p->X;
 }
 
 void Point::setX(float x) {
-    dPtr->_point->X = x;
+    dPtr->_p->X = x;
 }
 
 float Point::getY() const {
-    return dPtr->_point->Y;
+    return dPtr->_p->Y;
 }
 
 void Point::setY(float y) {
-    dPtr->_point->Y = y;
+    dPtr->_p->Y = y;
 }
 
 float Point::getZ() const {
-    return dPtr->_point->Z;
+    return dPtr->_p->Z;
 }
 
 void Point::setZ(float z) {
-    dPtr->_point->Z = z;
+    dPtr->_p->Z = z;
 }
 
-void* Point::getManagedObject() {
+void* Point::getManagedPtr() {
     
     if (dPtr == nullptr)
         return nullptr;
@@ -112,11 +120,13 @@ void* Point::getManagedObject() {
     
 }
 
-void Point::releaseManagedObject() {
-
+void Point::releaseManagedPtr() {
     dPtr->unlock();
-    /*GCHandle^ handle = GCHandle::FromIntPtr(IntPtr(objPtr));
-    if (handle != nullptr)
-        handle->Free();*/
-
 }
+
+//void Point::collect() {
+//    System::GC::AddMemoryPressure(10000000);
+//    System::GC::Collect();
+//    System::GC::RemoveMemoryPressure(10000000);
+//    
+//}

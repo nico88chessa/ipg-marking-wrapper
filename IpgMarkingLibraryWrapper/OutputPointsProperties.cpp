@@ -13,33 +13,41 @@ using namespace ipg_marking_library_wrapper;
 
 class ipg_marking_library_wrapper::OutputPointsPropertiesPrivate {
 public:
-    msclr::auto_gcroot<ipgml::OutputPointsProperties^> _outputPointProperties;
+    msclr::auto_gcroot<ipgml::OutputPointsProperties^> _opp;
+    msclr::gcroot<ipgml::OutputPointsProperties^> _opp2;
     GCHandle handle;
 
 public:
+    OutputPointsPropertiesPrivate() { }
+
     OutputPointsPropertiesPrivate(float pulseEnergy) {
-        _outputPointProperties = gcnew ipgml::OutputPointsProperties(pulseEnergy);
-        handle = GCHandle::Alloc(_outputPointProperties);
+        _opp = gcnew ipgml::OutputPointsProperties(pulseEnergy);
     }
+
     OutputPointsPropertiesPrivate(float pulseEnergy, ipgml::Optimization opt) {
-        _outputPointProperties = gcnew ipgml::OutputPointsProperties(pulseEnergy, opt);
-        handle = GCHandle::Alloc(_outputPointProperties);
+        _opp = gcnew ipgml::OutputPointsProperties(pulseEnergy, opt);
     }
-    OutputPointsPropertiesPrivate(ipgml::OutputPointsProperties^ other) {
-        _outputPointProperties = other;
-        handle = GCHandle::Alloc(other);
-    }
+
     ~OutputPointsPropertiesPrivate() {
-        handle.Free();
+        unlock();
+    }
+
+    void* getManaged() {
+        if (!handle.IsAllocated)
+            handle = GCHandle::Alloc(_opp.get());
+        void* obj = GCHandle::ToIntPtr(handle).ToPointer();
+        return obj;
+    }
+
+    void unlock() {
+        if (handle.IsAllocated)
+            handle.Free();
     }
 };
 
 
-OutputPointsProperties::OutputPointsProperties(void* other) {
-    IntPtr pointer(other);
-    GCHandle handle = GCHandle::FromIntPtr(pointer);
-    ipgml::OutputPointsProperties^ obj = (ipgml::OutputPointsProperties^)handle.Target;
-    this->dPtr = new OutputPointsPropertiesPrivate(obj);
+OutputPointsProperties::OutputPointsProperties() {
+    dPtr = new OutputPointsPropertiesPrivate();
 }
 
 OutputPointsProperties::OutputPointsProperties(float pulseEnergy) {
@@ -74,7 +82,7 @@ Optimization OutputPointsProperties::getOptimization() const {
         return Optimization::DEFAULT;
 
     Optimization opt;
-    switch (dPtr->_outputPointProperties->Opt) {
+    switch (dPtr->_opp->Opt) {
     case ipgml::Optimization::Default: opt = Optimization::DEFAULT; break;
     case ipgml::Optimization::Quality: opt = Optimization::QUALITY; break;
     case ipgml::Optimization::Speed: opt = Optimization::SPEED; break;
@@ -86,13 +94,19 @@ float OutputPointsProperties::getPulseEnergy() const {
     if (dPtr == nullptr)
         return 0.0f;
 
-    return dPtr->_outputPointProperties->PulseEnergy;
+    return dPtr->_opp->PulseEnergy;
 }
 
-void* OutputPointsProperties::getManagedObject() {
+void* OutputPointsProperties::getManagedPtr() {
+    
     if (dPtr == nullptr)
         return nullptr;
 
-    return GCHandle::ToIntPtr(dPtr->handle).ToPointer();
+    void* obj = dPtr->getManaged();
+    return obj;
 
+}
+
+void OutputPointsProperties::releaseManagedPtr() {
+    dPtr->unlock();
 }

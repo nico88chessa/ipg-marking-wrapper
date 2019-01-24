@@ -48,6 +48,18 @@
     <ClInclude Include="PointList.h">
       <Filter>File di intestazione</Filter>
     </ClInclude>
+    <ClInclude Include="PointWrapper.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
+    <ClInclude Include="OutputPointsPropertiesWrapper.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
+    <ClInclude Include="OutputVectorsPropertiesWrapper.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
+    <ClInclude Include="PointParametersWrapper.h">
+      <Filter>File di intestazione</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -75,6 +87,18 @@
       <Filter>File di origine</Filter>
     </ClCompile>
     <ClCompile Include="PointList.cpp">
+      <Filter>File di origine</Filter>
+    </ClCompile>
+    <ClCompile Include="PointWrapper.cpp">
+      <Filter>File di origine</Filter>
+    </ClCompile>
+    <ClCompile Include="OutputPointsPropertiesWrapper.cpp">
+      <Filter>File di origine</Filter>
+    </ClCompile>
+    <ClCompile Include="OutputVectorsPropertiesWrapper.cpp">
+      <Filter>File di origine</Filter>
+    </ClCompile>
+    <ClCompile Include="PointParametersWrapper.cpp">
       <Filter>File di origine</Filter>
     </ClCompile>
   </ItemGroup>

@@ -17,30 +17,46 @@ public:
     GCHandle handle;
 
 public:
+    OutputVectorsPropertiesPrivate() { }
+
     OutputVectorsPropertiesPrivate(float pitch, float pulseEnergy) {
         _ovp = gcnew ipgml::OutputVectorsProperties(pitch, pulseEnergy);
-        handle = GCHandle::Alloc(_ovp);
     }
+
     OutputVectorsPropertiesPrivate(float powerWatt, float velocity, float frequency, float pulseWidth, ipgml::Optimization opt) {
         _ovp = gcnew ipgml::OutputVectorsProperties(powerWatt, velocity, frequency, pulseWidth, opt);
-        handle = GCHandle::Alloc(_ovp);
     }
+
     OutputVectorsPropertiesPrivate(float pitch, float pulseEnergy, ipgml::Optimization opt) {
         _ovp = gcnew ipgml::OutputVectorsProperties(pitch, pulseEnergy, opt);
-        handle = GCHandle::Alloc(_ovp);
     }
+
     OutputVectorsPropertiesPrivate(float pitch, float pulseEnergy, ipgml::Optimization opt, float frequency) {
         _ovp = gcnew ipgml::OutputVectorsProperties(pitch, pulseEnergy, opt, frequency);
-        handle = GCHandle::Alloc(_ovp);
     }
-    OutputVectorsPropertiesPrivate(ipgml::OutputVectorsProperties^ other) {
-        _ovp = other;
-        handle = GCHandle::Alloc(other);
-    }
+
     ~OutputVectorsPropertiesPrivate() {
-        handle.Free();
+        unlock();
     }
+
+    void* getManaged() {
+        if (!handle.IsAllocated)
+            handle = GCHandle::Alloc(_ovp.get());
+        void* obj = GCHandle::ToIntPtr(handle).ToPointer();
+        return obj;
+    }
+
+    void unlock() {
+        if (handle.IsAllocated)
+            handle.Free();
+    }
+
 };
+
+
+OutputVectorsProperties::OutputVectorsProperties() {
+    this->dPtr = new OutputVectorsPropertiesPrivate();
+}
 
 OutputVectorsProperties::OutputVectorsProperties(float pitch, float pulseEnergy) {
     this->dPtr = new OutputVectorsPropertiesPrivate(pitch, pulseEnergy);
@@ -80,13 +96,6 @@ OutputVectorsProperties::OutputVectorsProperties(float pitch, float pulseEnergy,
     this->dPtr = new OutputVectorsPropertiesPrivate(pitch, pulseEnergy, o, frequency);
 }
 
-OutputVectorsProperties::OutputVectorsProperties(void* other) {
-    IntPtr pointer(other);
-    GCHandle handle = GCHandle::FromIntPtr(pointer);
-    ipgml::OutputVectorsProperties^ obj = (ipgml::OutputVectorsProperties^)handle.Target;
-    this->dPtr = new OutputVectorsPropertiesPrivate(obj);
-}
-
 OutputVectorsProperties::OutputVectorsProperties(OutputVectorsProperties&& other) {
     this->dPtr = other.dPtr;
     other.dPtr = nullptr;
@@ -121,4 +130,16 @@ float OutputVectorsProperties::getPulseEnergy() const {
 
 float OutputVectorsProperties::getPulseWidth() const {
     return dPtr->_ovp->PulseWidth;
+}
+
+void* OutputVectorsProperties::getManagedObject() {
+    if (dPtr == nullptr)
+        return nullptr;
+
+    void* obj = dPtr->getManaged();
+    return obj;
+}
+
+void OutputVectorsProperties::releaseManagedObject() {
+    dPtr->unlock();
 }

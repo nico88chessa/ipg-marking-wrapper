@@ -16,14 +16,18 @@
 #include "OutputPointsProperties.h"
 #include "OutputVectorsProperties.h"
 #include "PointParameters.h"
+#include "PointParametersWrapper.h"
 
 namespace ipg_marking_library_wrapper {
 
     class ScannerPrivate;
+    class PointParametersHandler;
 
     class IPGMARKINGLIBRARYWRAPPER_API Scanner {
     private:
         ScannerPrivate* dPtr;
+        PointParametersHandler* ppHandler;
+
         bool isToCloseBeforeDelete;
 
     public:
@@ -31,7 +35,7 @@ namespace ipg_marking_library_wrapper {
         ~Scanner();
 
         void close();
-        void config(OutputPointsProperties properties, float pitch);
+        void config(OutputPointsProperties& properties, float pitch);
         void config(OutputVectorsProperties);
         void exit();
         void finalize();
@@ -46,9 +50,13 @@ namespace ipg_marking_library_wrapper {
         void unlock();
         void wait(float);
         void wait(WaitEvent);
-        PointParameters getPointParameters();
         
+        PointParametersWrapper getManagedPointParameters();
+        void releaseManagedPointParameters();
         void* getManagedObject();
+        void releaseManagedObject();
+
+        void collect();
 
     };
 
