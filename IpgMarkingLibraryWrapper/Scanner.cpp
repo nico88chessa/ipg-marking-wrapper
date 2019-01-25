@@ -40,18 +40,6 @@ public:
 
 };
 
-class ipg_marking_library_wrapper::PointParametersHandler {
-public:
-    GCHandle handle;
-
-    PointParametersHandler() { }
-
-    ~PointParametersHandler() {
-        if (handle.IsAllocated)
-            handle.Free();
-    }
-};
-
 
 Scanner::Scanner(const std::string& name, bool lock, Units u, std::string& err) : dPtr(nullptr) {
 
@@ -59,8 +47,6 @@ Scanner::Scanner(const std::string& name, bool lock, Units u, std::string& err) 
 
     System::String^ _name = gcnew System::String(name.c_str());
     //std::string prova = "laser-5410ECA7BC1A.local";
-    //System::Boolean^ v = gcnew System::Boolean(false);
-    //ipgml::Units^ c = gcnew ipgml::Units^(ipgml::Units::Millimeters);
 
     ipgml::Units _u;
     bool res = false;
@@ -79,7 +65,6 @@ Scanner::Scanner(const std::string& name, bool lock, Units u, std::string& err) 
         err = chars;
         Marshal::FreeHGlobal(IntPtr((void*)chars));
     }
-    ppHandler = new PointParametersHandler();
 
 }
 
@@ -89,7 +74,6 @@ Scanner::~Scanner() {
         this->close();
 
     delete dPtr;
-    delete ppHandler;
 }
 
 void* Scanner::getManagedObject() {
@@ -161,19 +145,34 @@ void Scanner::lock() {
     dPtr->_s->Lock();
 }
 
-std::vector<ScannerInfo> Scanner::scanners() {
-    /*if (dPtr == nullptr)
-        return std::vector<ScannerInfo>();*/
+void Scanner::output(PointList& list) {
 
-        /*auto test = dPtr->_s->Scanners();
-        Collections::Generic::List<ipgml::ScannerInfo>^ scannerList = dPtr->_s->Scanners();*/
+    GCHandle handle = GCHandle::FromIntPtr(IntPtr(list.getManagedPtr()));
+    ipgml::PointList^ obj = (ipgml::PointList^)handle.Target;
+    dPtr->_s->Output(obj);
+    list.releaseManagedPtr();
+
+}
+
+void Scanner::output(PointList& list, OutputPointsProperties& properties) {
+
+    GCHandle handleList = GCHandle::FromIntPtr(IntPtr(list.getManagedPtr()));
+    GCHandle handleProp = GCHandle::FromIntPtr(IntPtr(properties.getManagedPtr()));
+    ipgml::PointList^ l = (ipgml::PointList^)handleList.Target;
+    ipgml::OutputPointsProperties^ p = (ipgml::OutputPointsProperties^)handleProp.Target;
+    dPtr->_s->Output(l, p);
+    list.releaseManagedPtr();
+    properties.releaseManagedPtr();
+
+}
+
+std::vector<ScannerInfo> Scanner::scanners() {
+    
     auto scannerList = ipgml::Scanner::Scanners();
     std::vector<ScannerInfo> list;
-    //ipgml::ScannerInfo^ p = gcnew ipgml::ScannerInfo();
-
+    
     for (int i = 0; i < scannerList->Count; ++i) {
 
-        //p = scannerList->ToArray()[i];
         ipgml::ScannerInfo^ p = scannerList->ToArray()[i];
 
         ConnectionStatus c;
@@ -226,19 +225,25 @@ void Scanner::wait(WaitEvent we) {
 
 }
 
-PointParametersWrapper Scanner::getManagedPointParameters() {
+void Scanner::clearLaserEntry() {
+    dPtr->_s->PointParameters->ClearLaserEntries();
+}
 
-    ipgml::PointParameters^ pp = dPtr->_s->PointParameters;
-    ppHandler->handle = GCHandle::Alloc(pp);
-    IntPtr pointer = GCHandle::ToIntPtr(ppHandler->handle);
-    PointParametersWrapper temp(pointer.ToPointer());
-    return temp;
+void Scanner::addLaserEntry(float dwell, float width, float powerPercent, int count) {
+    dPtr->_s->PointParameters->AddLaserEntry(dwell, width, powerPercent, count);
+}
+
+void Scanner::laser(LaserAction l) {
+
+    ipgml::LaserAction _action;
+    switch (l) {
+        case LaserAction::Disable: _action = ipgml::LaserAction::Disable; break;
+        case LaserAction::Enable: _action = ipgml::LaserAction::Enable; break;
+    }
+    dPtr->_s->Laser(_action);
 
 }
 
-void Scanner::releaseManagedPointParameters() {
-    if (ppHandler->handle.IsAllocated)
-        ppHandler->handle.Free();
-
+void Scanner::guide(bool guideValue) {
+    dPtr->_s->Guide = guideValue;
 }
-        

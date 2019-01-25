@@ -14,6 +14,47 @@ using namespace std;
 using namespace ipg_marking_library_wrapper;
 
 int main() {
+    auto prova = Scanner::scanners();
+    string err;
+    
+    auto s = new Scanner(prova[0].getName(), true, Units::MICRONS, err);
+    OutputPointsProperties pointparam(0.001);
+    s->config(pointparam, 0.0f);
+
+    float powerpercent = 100.0;
+    float width = (float) 1.0f / 300000;
+    float dwell = width;
+    int numberOfPulses = 200;
+    
+    s->clearLaserEntry();
+    s->addLaserEntry(dwell, width, powerpercent, numberOfPulses);
+
+    std::list<Point> listOfPoints;
+    float pitch = 250;
+    
+    int x = 20;
+    int y = 20;
+    for (int j = 0; j < y; j++) {
+        for (int i = 0; i < x; i++) {
+            listOfPoints.push_back(Point(pitch*i, pitch*j));
+        }
+    }
+
+    {
+        PointList outputpoint(listOfPoints);
+
+        s->guide(false);
+        s->wait(WaitEvent::StartBit);
+        s->laser(LaserAction::Enable);
+        s->output(outputpoint);
+        s->laser(LaserAction::Disable);
+    }
+
+    int w = 10;
+
+}
+
+int main2() {
     
     //std::cout << "Hello World!\n";
     //auto prova = Scanner::scanners();
@@ -80,7 +121,8 @@ int main() {
     for (int i = 0; i < listIpg.count(); ++i)
         std::cout << listIpg.element(i).getX() << " - " << listIpg.element(i).getY() << std::endl;
     
-    std::cout << "Bye bye!\n"; 
+    std::cout << "Bye bye!\n";
+    return 0;
 
 }
 

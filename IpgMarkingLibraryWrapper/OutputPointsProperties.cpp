@@ -14,7 +14,6 @@ using namespace ipg_marking_library_wrapper;
 class ipg_marking_library_wrapper::OutputPointsPropertiesPrivate {
 public:
     msclr::auto_gcroot<ipgml::OutputPointsProperties^> _opp;
-    msclr::gcroot<ipgml::OutputPointsProperties^> _opp2;
     GCHandle handle;
 
 public:

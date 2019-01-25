@@ -35,4 +35,9 @@ namespace ipg_marking_library_wrapper {
         StartBit
     };
 
+    enum class LaserAction : int {
+        Disable,
+        Enable
+    };
+
 }

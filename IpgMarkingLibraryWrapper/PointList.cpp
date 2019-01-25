@@ -14,20 +14,37 @@ using namespace ipg_marking_library_wrapper;
 
 class ipg_marking_library_wrapper::PointListPrivate {
 public:
-    msclr::gcroot<ipgml::PointList^> _pl;
+    msclr::auto_gcroot<ipgml::PointList^> _pl;
     GCHandle handle;
 
 public:
     PointListPrivate(System::Collections::Generic::List<ipgml::Point^>^ list) {
         _pl = gcnew ipgml::PointList(list);
     }
+
     PointListPrivate() {
         _pl = gcnew ipgml::PointList();
     }
+
     PointListPrivate(ipgml::PointList^ other) {
         _pl = other;
     }
+
     ~PointListPrivate() {
+        unlock();
+    }
+
+    void* getManaged() {
+        if (!handle.IsAllocated)
+            handle = GCHandle::Alloc(_pl.get());
+        IntPtr t(GCHandle::ToIntPtr(handle));
+        void* obj = t.ToPointer();
+        return obj;
+    }
+
+    void unlock() {
+        if (handle.IsAllocated)
+            handle.Free();
     }
 };
 
@@ -83,4 +100,16 @@ void PointList::shift(float x, float y, float z) {
     if (this->dPtr == nullptr)
         return;
     this->dPtr->_pl->Shift(x, y, z);
+}
+
+void* PointList::getManagedPtr() {
+    if (dPtr == nullptr)
+        return nullptr;
+
+    void* obj = dPtr->getManaged();
+    return obj;
+}
+
+void PointList::releaseManagedPtr() {
+    dPtr->unlock();
 }

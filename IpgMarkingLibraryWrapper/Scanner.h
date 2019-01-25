@@ -17,6 +17,7 @@
 #include "OutputVectorsProperties.h"
 #include "PointParameters.h"
 #include "PointParametersWrapper.h"
+#include "PointList.h"
 
 namespace ipg_marking_library_wrapper {
 
@@ -26,8 +27,6 @@ namespace ipg_marking_library_wrapper {
     class IPGMARKINGLIBRARYWRAPPER_API Scanner {
     private:
         ScannerPrivate* dPtr;
-        PointParametersHandler* ppHandler;
-
         bool isToCloseBeforeDelete;
 
     public:
@@ -42,21 +41,23 @@ namespace ipg_marking_library_wrapper {
         bool isDone();
         bool isWaitingEvent();
         void lock();
-        /*void output(PointList);
-        void output(PointList, OutputPointsPropertiesW);
-        void output(VectorList);
+        void output(PointList& list);
+        void output(PointList& list, OutputPointsProperties& properties);
+        /*void output(VectorList);
         void output(VectorList, OutputVectorsProperties);*/
         static std::vector<ScannerInfo> scanners();
         void unlock();
         void wait(float);
         void wait(WaitEvent);
+        void laser(LaserAction l);
+        void guide(bool guideValue);
+        void clearLaserEntry();
+        void addLaserEntry(float dwell, float width, float powerPercent, int count);
         
-        PointParametersWrapper getManagedPointParameters();
-        void releaseManagedPointParameters();
         void* getManagedObject();
         void releaseManagedObject();
 
-        void collect();
+        //void collect();
 
     };
 

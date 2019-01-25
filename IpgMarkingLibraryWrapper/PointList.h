@@ -21,8 +21,10 @@ namespace ipg_marking_library_wrapper {
         ~PointList();
         int count() const;
         Point element(int i);
-
         void shift(float x, float y, float z);
+
+        void* getManagedPtr();
+        void releaseManagedPtr();
 
     };
 
