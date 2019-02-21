@@ -102,6 +102,30 @@ void PointList::shift(float x, float y, float z) {
     this->dPtr->_pl->Shift(x, y, z);
 }
 
+void PointList::rotate(double z) {
+    if (this->dPtr == nullptr)
+        return;
+    this->dPtr->_pl->Rotate(z);
+}
+
+void PointList::rotate(double x, double y, double z) {
+    if (this->dPtr == nullptr)
+        return;
+    this->dPtr->_pl->Rotate(x, y, z);
+}
+
+void PointList::rotate(float z) {
+    if (this->dPtr == nullptr)
+        return;
+    dPtr->_pl->Rotate(z);
+}
+
+void PointList::rotate(float x, float y, float z) {
+    if (this->dPtr == nullptr)
+        return;
+    this->dPtr->_pl->Rotate(x, y, z);
+}
+
 void* PointList::getManagedPtr() {
     if (dPtr == nullptr)
         return nullptr;
