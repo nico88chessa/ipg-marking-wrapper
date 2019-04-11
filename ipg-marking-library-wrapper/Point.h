@@ -38,4 +38,3 @@ namespace ipg_marking_library_wrapper {
     };
 
 }
-

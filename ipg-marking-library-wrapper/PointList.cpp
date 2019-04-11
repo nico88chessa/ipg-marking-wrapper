@@ -14,6 +14,7 @@ namespace ipgml = IpgMarkingGraphicsLibrary;
 
 using namespace ipg_marking_library_wrapper;
 
+
 class ipg_marking_library_wrapper::PointListPrivate {
 public:
     msclr::auto_gcroot<ipgml::PointList^> _pl;
@@ -53,6 +54,7 @@ public:
             handle.Free();
     }
 };
+
 
 PointList::PointList() {
     dPtr = new PointListPrivate();
@@ -120,7 +122,7 @@ int PointList::count() const {
     return this->dPtr->_pl->Count;
 }
 
-Point PointList::element(int i) {
+Point PointList::element(int i) const {
 
     try {
 
@@ -196,4 +198,11 @@ void* PointList::getManagedPtr() {
 
 void PointList::releaseManagedPtr() {
     dPtr->unlock();
+}
+
+std::ostream& ipg_marking_library_wrapper::operator<<(std::ostream& os, const PointList& obj) {
+    int size = obj.count();
+    for (int i = 0; i < size; ++i)
+        os << obj.element(i) << std::endl;
+    return os;
 }

@@ -7,6 +7,7 @@
 #include "VectorList.h"
 #include "LibraryException.h"
 
+
 using namespace System;
 using namespace System::Runtime::InteropServices;
 namespace ipgml = IpgMarkingGraphicsLibrary;
@@ -99,8 +100,10 @@ void VectorList::append(const VectorList& vl) {
     if (dPtr == nullptr)
         return;
 
+    // BUGFIX IPG 11/04/2019 - questo bypassa un problema sulle librerie dell'ipg (allocazione memoria infinita)
     if (vl.dPtr == this->dPtr)
         return;
+    // FINE BUGFIX
 
     try {
         dPtr->_vl->Append(vl.dPtr->_vl.get());

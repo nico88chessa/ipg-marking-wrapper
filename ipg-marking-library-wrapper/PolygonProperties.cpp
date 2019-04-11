@@ -11,6 +11,7 @@ namespace ipgml = IpgMarkingGraphicsLibrary;
 
 using namespace ipg_marking_library_wrapper;
 
+
 class ipg_marking_library_wrapper::PolygonPropertiesPrivate {
 public:
     msclr::auto_gcroot<ipgml::PolygonProperties^> _pp;
@@ -38,6 +39,7 @@ public:
     }
 
 };
+
 
 PolygonProperties::PolygonProperties(int numberOfSides, float radius) {
 
@@ -71,4 +73,8 @@ void* PolygonProperties::getManagedPtr() {
 
 void PolygonProperties::releaseManagedPtr() {
     dPtr->unlock();
+}
+
+std::ostream& ipg_marking_library_wrapper::operator<<(std::ostream& os, const PolygonProperties& obj) {
+    return os << "PolygonProperties - N.sides: " << obj.getNumberOfSides() << "; radius: " << obj.getRadius();
 }

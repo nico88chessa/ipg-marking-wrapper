@@ -1,6 +1,8 @@
 #pragma once
 
 #include "IpgmlDef.h"
+#include <iostream>
+
 
 namespace ipg_marking_library_wrapper {
 
@@ -18,6 +20,8 @@ namespace ipg_marking_library_wrapper {
 
         void* getManagedPtr();
         void releaseManagedPtr();
+
+        IPGMARKINGLIBRARYWRAPPER_API friend std::ostream& operator<<(std::ostream& os, const PolygonProperties& obj);
 
     };
 

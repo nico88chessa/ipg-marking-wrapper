@@ -11,6 +11,7 @@ namespace ipgml = IpgMarkingGraphicsLibrary;
 
 using namespace ipg_marking_library_wrapper;
 
+
 class ipg_marking_library_wrapper::PointPrivate {
 public:
     msclr::auto_gcroot<ipgml::Point^> _p;
