@@ -141,6 +141,7 @@
   <ItemGroup>
     <ClInclude Include="Enums.h" />
     <ClInclude Include="IpgmlDef.h" />
+    <ClInclude Include="LibraryException.h" />
     <ClInclude Include="OutputPointsProperties.h" />
     <ClInclude Include="OutputPointsPropertiesWrapper.h" />
     <ClInclude Include="OutputVectorsProperties.h" />
@@ -150,10 +151,13 @@
     <ClInclude Include="PointParameters.h" />
     <ClInclude Include="PointParametersWrapper.h" />
     <ClInclude Include="PointWrapper.h" />
+    <ClInclude Include="PolygonProperties.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Scanner.h" />
     <ClInclude Include="ScannerInfo.h" />
     <ClInclude Include="Stdafx.h" />
+    <ClInclude Include="Vector.h" />
+    <ClInclude Include="VectorList.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
@@ -166,6 +170,7 @@
     <ClCompile Include="PointParameters.cpp" />
     <ClCompile Include="PointParametersWrapper.cpp" />
     <ClCompile Include="PointWrapper.cpp" />
+    <ClCompile Include="PolygonProperties.cpp" />
     <ClCompile Include="Scanner.cpp" />
     <ClCompile Include="ScannerInfo.cpp" />
     <ClCompile Include="Stdafx.cpp">
@@ -174,6 +179,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Vector.cpp" />
+    <ClCompile Include="VectorList.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />

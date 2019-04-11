@@ -132,7 +132,7 @@ float OutputVectorsProperties::getPulseWidth() const {
     return dPtr->_ovp->PulseWidth;
 }
 
-void* OutputVectorsProperties::getManagedObject() {
+void* OutputVectorsProperties::getManagedPtr() {
     if (dPtr == nullptr)
         return nullptr;
 
@@ -140,6 +140,6 @@ void* OutputVectorsProperties::getManagedObject() {
     return obj;
 }
 
-void OutputVectorsProperties::releaseManagedObject() {
+void OutputVectorsProperties::releaseManagedPtr() {
     dPtr->unlock();
 }

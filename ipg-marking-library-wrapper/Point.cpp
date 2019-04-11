@@ -64,9 +64,8 @@ Point::Point(const Point & other) {
 Point::Point(void* other) {
     IntPtr pointer(other);
     GCHandle handle = GCHandle::FromIntPtr(pointer);
-    ipgml::Point^ obj = (ipgml::Point^)handle.Target;
-    this->dPtr = new PointPrivate();
-    this->dPtr->_p.reset(obj);
+    ipgml::Point^ obj = (ipgml::Point^) handle.Target;
+    this->dPtr = new PointPrivate(obj);
 }
 
 Point::Point(float x, float y) {
@@ -84,6 +83,13 @@ Point::Point(Point && other) {
 
 Point::~Point() {
     delete dPtr;
+}
+
+Point& Point::operator=(const Point& other) {
+
+    ipgml::Point^ clonedPoint = (ipgml::Point^)other.dPtr->_p->Clone();
+    this->dPtr->_p.reset(clonedPoint);
+    return *this;
 }
 
 float Point::getX() const {
@@ -130,3 +136,7 @@ void Point::releaseManagedPtr() {
 //    System::GC::RemoveMemoryPressure(10000000);
 //    
 //}
+
+std::ostream& ipg_marking_library_wrapper::operator<<(std::ostream& os, const Point& obj) {
+    return os << "Point (" << obj.getX() << "; " << obj.getY() << ")";
+}
