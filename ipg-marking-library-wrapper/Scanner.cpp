@@ -133,7 +133,27 @@ void Scanner::config(OutputPointsProperties& properties, float pitch) {
     properties.releaseManagedPtr();
 }
 
-void Scanner::config(OutputVectorsProperties opp) {
+void Scanner::config(OutputVectorsProperties& properties) {
+    if (dPtr == nullptr)
+        return;
+    GCHandle handle = GCHandle::FromIntPtr(IntPtr(properties.getManagedPtr()));
+    ipgml::OutputVectorsProperties^ obj = (ipgml::OutputVectorsProperties^)handle.Target;
+
+    try {
+        dPtr->_s->Config(obj);
+    }
+    catch (ipgml::LibraryException^ e) {
+
+        properties.releaseManagedPtr();
+        System::String^ managedMessage = e->Message;
+        msclr::interop::marshal_context context;
+        std::string message = context.marshal_as<std::string>(managedMessage);
+        throw LibraryException(message);
+
+    }
+
+    properties.releaseManagedPtr();
+
 }
 
 void Scanner::exit() {

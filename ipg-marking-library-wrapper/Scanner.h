@@ -36,7 +36,7 @@ namespace ipg_marking_library_wrapper {
 
         void close();
         void config(OutputPointsProperties& properties, float pitch);
-        void config(OutputVectorsProperties);
+        void config(OutputVectorsProperties& properties);
         void exit();
         void finalize();
         bool isDone();
