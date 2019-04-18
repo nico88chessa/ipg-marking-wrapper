@@ -17,31 +17,47 @@ using namespace ipg_marking_library_wrapper;
 
 class ipg_marking_library_wrapper::PointListPrivate {
 public:
-    msclr::auto_gcroot<ipgml::PointList^> _pl;
-    GCHandle handle;
+    //msclr::auto_gcroot<ipgml::PointList^> _pl;
+    //GCHandle handle;
+    POINTLIST_HANDLER handler;
 
 public:
     PointListPrivate(System::Collections::Generic::List<ipgml::Point^>^ list) {
-        _pl = gcnew ipgml::PointList(list);
+        //_pl = gcnew ipgml::PointList(list);
+        handler = GCHandle::ToIntPtr(GCHandle::Alloc(gcnew ipgml::PointList(list))).ToPointer();
     }
 
     PointListPrivate() {
-        _pl = gcnew ipgml::PointList();
+        //_pl = gcnew ipgml::PointList();
+        handler = GCHandle::ToIntPtr(GCHandle::Alloc(gcnew ipgml::PointList())).ToPointer();
     }
 
     PointListPrivate(ipgml::PolygonProperties^ polygonProperties) {
-        _pl = gcnew ipgml::PointList(polygonProperties);
+        //_pl = gcnew ipgml::PointList(polygonProperties);
+        handler = GCHandle::ToIntPtr(GCHandle::Alloc(gcnew ipgml::PointList(polygonProperties))).ToPointer();
     }
 
-    PointListPrivate(ipgml::PointList^ other) {
-        _pl = other;
-    }
+    //PointListPrivate(ipgml::PointList^ other) {
+        //_pl = other;
+    //}
 
     ~PointListPrivate() {
-        unlock();
+        //unlock();
+        GCHandle h = GCHandle::FromIntPtr(IntPtr(handler));
+        delete GCHandle::FromIntPtr(IntPtr(handler)).Target;
+        handler = nullptr;
+        h.Free();
     }
 
-    void* getManaged() {
+    ipgml::PointList^ operator->() const {
+        return static_cast<ipgml::PointList^>(GCHandle::FromIntPtr(IntPtr(handler)).Target);
+    }
+
+    ipgml::PointList^ get() const {
+        return static_cast<ipgml::PointList^>(GCHandle::FromIntPtr(IntPtr(handler)).Target);
+    }
+
+    /*void* getManaged() {
         if (!handle.IsAllocated)
             handle = GCHandle::Alloc(_pl.get());
         IntPtr t(GCHandle::ToIntPtr(handle));
@@ -52,9 +68,16 @@ public:
     void unlock() {
         if (handle.IsAllocated)
             handle.Free();
-    }
+    }*/
 };
 
+
+CONST_POINTLIST_HANDLER PointList::getManagedPtr() const {
+    if (dPtr == nullptr)
+        return nullptr;
+
+    return dPtr->handler;
+}
 
 PointList::PointList() {
     dPtr = new PointListPrivate();
@@ -67,16 +90,23 @@ PointList::PointList(std::list<Point>& points) {
     while (!points.empty()) {
         Point c = points.front();
         points.pop_front();
-        GCHandle^ handle = GCHandle::FromIntPtr(IntPtr(c.getManagedPtr()));
-        ipgml::Point^ point = (ipgml::Point^)handle->Target;
+        ipgml::Point^ point = (ipgml::Point^) GCHandle::FromIntPtr(IntPtr(const_cast<void*>(c.getManagedPtr()))).Target;
+        //ipgml::Point^ point = (ipgml::Point^)handle->Target;
+        //ipgml::Point^ point = c.getWrapped().dPtr->
         list->Add(point);
-        c.releaseManagedPtr();
+        //c.releaseManagedPtr();
     }
 
     dPtr = new PointListPrivate(list);
 }
 
-PointList::PointList(PointList && other) {
+//PointList::PointList(const PointList& other) {
+//    //dPtr = new PointListPrivate(other.dPtr->_pl->points);
+//    ipgml::PointList^ pl = (ipgml::PointList^) GCHandle::FromIntPtr(IntPtr(other.dPtr->handler)).Target;
+//    dPtr = new PointListPrivate(pl->points);
+//}
+
+PointList::PointList(PointList&& other) {
     this->dPtr = other.dPtr;
     other.dPtr = nullptr;
 }
@@ -84,7 +114,7 @@ PointList::PointList(PointList && other) {
 PointList::PointList(const PolygonProperties& polygonProperties) {
 
     ipgml::PolygonProperties^ managedPolygonProperties = gcnew ipgml::PolygonProperties(
-        (int)polygonProperties.getNumberOfSides(),
+        (int) polygonProperties.getNumberOfSides(),
         polygonProperties.getRadius());
     
     dPtr = new PointListPrivate(managedPolygonProperties);
@@ -106,7 +136,8 @@ void PointList::append(const PointList& pl) {
     // FINE BUGFIX
 
     try {
-        dPtr->_pl->Append(pl.dPtr->_pl.get());
+        //dPtr->_pl->Append(pl.dPtr->_pl.get());
+        (*dPtr)->Append(pl.dPtr->get());
     } catch (ipgml::LibraryException^ e) {
 
         System::String^ managedMessage = e->Message;
@@ -119,18 +150,33 @@ void PointList::append(const PointList& pl) {
 }
 
 int PointList::count() const {
-    return this->dPtr->_pl->Count;
+    return (*dPtr)->Count;
 }
 
-Point PointList::element(int i) const {
+Point PointList::center() const {
+
+    if (this->dPtr == nullptr)
+        return Point();
+
+    ipgml::Point^ centerManaged = (*dPtr)->Center; // qui viene fatta una copia del Punto dalla dll ipg
+    GCHandle handle = GCHandle::Alloc(centerManaged);  // nessuna copia del Punto, punto allo stesso oggetto (copia)  
+    Point res(GCHandle::ToIntPtr(handle).ToPointer()); // nessuna copia del Punto, punto allo stesso oggetto (copia)
+    handle.Free();
+    return res;
+
+}
+
+PointWrapper PointList::element(int i) const {
 
     try {
 
-        ipgml::Point^ p = dPtr->_pl->Element(i); // qui la dll torna un reference
+        //ipgml::Point^ p = dPtr->_pl->Element(i); // qui la dll torna un reference
+        ipgml::Point^ p = (*dPtr)->Element(i);
         GCHandle handle = GCHandle::Alloc(p);               // nessuna copia del Punto, punto allo stesso oggetto (reference)
-        Point res(GCHandle::ToIntPtr(handle).ToPointer());  // nessuna copia del Punto, punto allo stesso oggetto (reference)
+        //PointWrapper* res = new PointWrapper(GCHandle::ToIntPtr(handle).ToPointer());  // nessuna copia del Punto, punto allo stesso oggetto (reference)
+        PointWrapper res(GCHandle::ToIntPtr(handle).ToPointer());  // nessuna copia del Punto, punto allo stesso oggetto (reference)
         handle.Free();
-        return res;
+        return res;  // copy elided
     
     } catch (ipgml::LibraryException^ e) {
 
@@ -141,64 +187,51 @@ Point PointList::element(int i) const {
 
     }
 
-    return Point();
+    return PointWrapper();
 
 }
 
 void PointList::shift(float x, float y, float z) {
     if (this->dPtr == nullptr)
         return;
-    this->dPtr->_pl->Shift(x, y, z);
+    (*dPtr)->Shift(x, y, z);
 }
 
 void PointList::rotate(double z) {
     if (this->dPtr == nullptr)
         return;
-    this->dPtr->_pl->Rotate(z);
+    (*dPtr)->Rotate(z);
 }
 
 void PointList::rotate(double x, double y, double z) {
     if (this->dPtr == nullptr)
         return;
-    this->dPtr->_pl->Rotate(x, y, z);
+    (*dPtr)->Rotate(x, y, z);
 }
 
 void PointList::rotate(float z) {
     if (this->dPtr == nullptr)
         return;
-    dPtr->_pl->Rotate(z);
+    (*dPtr)->Rotate(z);
 }
 
 void PointList::rotate(float x, float y, float z) {
     if (this->dPtr == nullptr)
         return;
-    this->dPtr->_pl->Rotate(x, y, z);
+    (*dPtr)->Rotate(x, y, z);
 }
 
-Point PointList::center() const {
-    
-    if (this->dPtr == nullptr)
-        return Point();
-
-    ipgml::Point^ centerManaged = this->dPtr->_pl->Center; // qui viene fatta una copia del Punto dalla dll ipg
-    GCHandle handle = GCHandle::Alloc(centerManaged);  // nessuna copia del Punto, punto allo stesso oggetto (copia)  
-    Point res(GCHandle::ToIntPtr(handle).ToPointer()); // nessuna copia del Punto, punto allo stesso oggetto (copia)
-    handle.Free();
-    return res;
-
-}
-
-void* PointList::getManagedPtr() {
-    if (dPtr == nullptr)
-        return nullptr;
-
-    void* obj = dPtr->getManaged();
-    return obj;
-}
-
-void PointList::releaseManagedPtr() {
-    dPtr->unlock();
-}
+//void* PointList::getManagedPtr() {
+//    if (dPtr == nullptr)
+//        return nullptr;
+//
+//    void* obj = dPtr->getManaged();
+//    return obj;
+//}
+//
+//void PointList::releaseManagedPtr() {
+//    dPtr->unlock();
+//}
 
 std::ostream& ipg_marking_library_wrapper::operator<<(std::ostream& os, const PointList& obj) {
     int size = obj.count();

@@ -17,44 +17,67 @@ using namespace ipg_marking_library_wrapper;
 
 class ipg_marking_library_wrapper::VectorListPrivate {
 public:
-    msclr::auto_gcroot<ipgml::VectorList^> _vl;
-    GCHandle handle;
+    /*msclr::auto_gcroot<ipgml::VectorList^> _vl;
+    GCHandle handle;*/
+    VECTORLIST_HANDLER handler;
 
 public:
     VectorListPrivate(System::Collections::Generic::List<ipgml::Vector^>^ list) {
-        _vl = gcnew ipgml::VectorList(list);
+        //_vl = gcnew ipgml::VectorList(list);
+        handler = GCHandle::ToIntPtr(GCHandle::Alloc(gcnew ipgml::VectorList(list))).ToPointer();
     }
 
     VectorListPrivate() {
-        _vl = gcnew ipgml::VectorList();
+        //_vl = gcnew ipgml::VectorList();
+        handler = GCHandle::ToIntPtr(GCHandle::Alloc(gcnew ipgml::VectorList())).ToPointer();
     }
 
     VectorListPrivate(ipgml::PolygonProperties^ polygonProperties) {
-        _vl = gcnew ipgml::VectorList(polygonProperties);
+        //_vl = gcnew ipgml::VectorList(polygonProperties);
+        handler = GCHandle::ToIntPtr(GCHandle::Alloc(gcnew ipgml::VectorList(polygonProperties))).ToPointer();
     }
 
-    VectorListPrivate(ipgml::VectorList^ other) {
-        _vl = other;
-    }
+    //VectorListPrivate(ipgml::VectorList^ other) {
+    //    //_vl = other;
+    //}
 
     ~VectorListPrivate() {
-        unlock();
+        //unlock();
+        GCHandle h = GCHandle::FromIntPtr(IntPtr(handler));
+        delete GCHandle::FromIntPtr(IntPtr(handler)).Target;
+        handler = nullptr;
+        h.Free();
     }
 
-    void* getManaged() {
-        if (!handle.IsAllocated)
-            handle = GCHandle::Alloc(_vl.get());
-        IntPtr t(GCHandle::ToIntPtr(handle));
-        void* obj = t.ToPointer();
-        return obj;
+    ipgml::VectorList^ operator->() const {
+        return static_cast<ipgml::VectorList^>(GCHandle::FromIntPtr(IntPtr(handler)).Target);
     }
 
-    void unlock() {
-        if (handle.IsAllocated)
-            handle.Free();
+    ipgml::VectorList^ get() const {
+        return static_cast<ipgml::VectorList^>(GCHandle::FromIntPtr(IntPtr(handler)).Target);
     }
+
+    //void* getManaged() {
+    //    if (!handle.IsAllocated)
+    //        handle = GCHandle::Alloc(_vl.get());
+    //    IntPtr t(GCHandle::ToIntPtr(handle));
+    //    void* obj = t.ToPointer();
+    //    return obj;
+    //}
+
+    //void unlock() {
+    //    if (handle.IsAllocated)
+    //        handle.Free();
+    //}
 };
 
+
+CONST_VECTORLIST_HANDLER VectorList::getManagedPtr() const {
+    if (dPtr == nullptr)
+        return nullptr;
+
+    return dPtr->handler;
+}
 
 VectorList::VectorList() {
     dPtr = new VectorListPrivate();
@@ -65,16 +88,21 @@ VectorList::VectorList(std::list<Vector>& vectors) {
     auto list = gcnew System::Collections::Generic::List<ipgml::Vector^>();
 
     while (!vectors.empty()) {
-        Vector c = vectors.front();
+        Vector v = vectors.front();
         vectors.pop_front();
-        GCHandle^ handle = GCHandle::FromIntPtr(IntPtr(c.getManagedPtr()));
-        ipgml::Vector^ vector = (ipgml::Vector^)handle->Target;
-        list->Add(vector);
-        c.releaseManagedPtr();
+        //GCHandle^ handle = GCHandle::FromIntPtr(IntPtr(c.getManagedPtr()));
+        //ipgml::Vector^ vector = (ipgml::Vector^)handle->Target;
+        ipgml::Vector^ vet = (ipgml::Vector^) GCHandle::FromIntPtr(IntPtr(const_cast<void*>(v.getManagedPtr()))).Target;
+        list->Add(vet);
+        //c.releaseManagedPtr();
     }
 
     dPtr = new VectorListPrivate(list);
 }
+
+//VectorList::VectorList(const VectorList & other) {
+//    dPtr = new VectorListPrivate(other.dPtr->_vl->vectors);
+//}
 
 VectorList::VectorList(VectorList&& other) {
     this->dPtr = other.dPtr;
@@ -106,7 +134,8 @@ void VectorList::append(const VectorList& vl) {
     // FINE BUGFIX
 
     try {
-        dPtr->_vl->Append(vl.dPtr->_vl.get());
+        //dPtr->_vl->Append(vl.dPtr->_vl.get());
+        (*dPtr)->Append(vl.dPtr->get());
     } catch (ipgml::LibraryException^ e) {
 
         System::String^ managedMessage = e->Message;
@@ -119,14 +148,14 @@ void VectorList::append(const VectorList& vl) {
 }
 
 int VectorList::count() const {
-    return this->dPtr->_vl->Count;
+    return (*dPtr)->Count;
 }
 
 Vector VectorList::element(int i) const {
 
     try {
 
-        ipgml::Vector^ v = dPtr->_vl->Element(i); // qui la dll torna un reference
+        ipgml::Vector^ v = (*dPtr)->Element(i); // qui la dll torna un reference
         GCHandle handle = GCHandle::Alloc(v);               // nessuna copia del vettore, punto allo stesso oggetto (reference)
         Vector res(GCHandle::ToIntPtr(handle).ToPointer());  // nessuna copia del vettore, punto allo stesso oggetto (reference)
         handle.Free();
@@ -148,31 +177,31 @@ Vector VectorList::element(int i) const {
 void VectorList::shift(float x, float y, float z) {
     if (this->dPtr == nullptr)
         return;
-    this->dPtr->_vl->Shift(x, y, z);
+    (*dPtr)->Shift(x, y, z);
 }
 
 void VectorList::rotate(double z) {
     if (this->dPtr == nullptr)
         return;
-    this->dPtr->_vl->Rotate(z);
+    (*dPtr)->Rotate(z);
 }
 
 void VectorList::rotate(double x, double y, double z) {
     if (this->dPtr == nullptr)
         return;
-    this->dPtr->_vl->Rotate(x, y, z);
+    (*dPtr)->Rotate(x, y, z);
 }
 
 void VectorList::rotate(float z) {
     if (this->dPtr == nullptr)
         return;
-    dPtr->_vl->Rotate(z);
+    (*dPtr)->Rotate(z);
 }
 
 void VectorList::rotate(float x, float y, float z) {
     if (this->dPtr == nullptr)
         return;
-    this->dPtr->_vl->Rotate(x, y, z);
+    (*dPtr)->Rotate(x, y, z);
 }
 
 Point VectorList::center() const {
@@ -180,7 +209,7 @@ Point VectorList::center() const {
     if (this->dPtr == nullptr)
         return Point();
 
-    ipgml::Point^ centerManaged = this->dPtr->_vl->Center; // qui viene fatta una copia del Punto dalla dll ipg
+    ipgml::Point^ centerManaged = (*dPtr)->Center; // qui viene fatta una copia del Punto dalla dll ipg
     GCHandle handle = GCHandle::Alloc(centerManaged);  // nessuna copia del Punto, punto allo stesso oggetto (copia)  
     Point res(GCHandle::ToIntPtr(handle).ToPointer()); // nessuna copia del Punto, punto allo stesso oggetto (copia)
     handle.Free();
@@ -188,17 +217,17 @@ Point VectorList::center() const {
 
 }
 
-void* VectorList::getManagedPtr() {
-    if (dPtr == nullptr)
-        return nullptr;
-
-    void* obj = dPtr->getManaged();
-    return obj;
-}
-
-void VectorList::releaseManagedPtr() {
-    dPtr->unlock();
-}
+//void* VectorList::getManagedPtr() {
+//    if (dPtr == nullptr)
+//        return nullptr;
+//
+//    void* obj = dPtr->getManaged();
+//    return obj;
+//}
+//
+//void VectorList::releaseManagedPtr() {
+//    dPtr->unlock();
+//}
 
 std::ostream & ipg_marking_library_wrapper::operator<<(std::ostream & os, const VectorList & obj) {
     int size = obj.count();

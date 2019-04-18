@@ -148,7 +148,7 @@
     <ClInclude Include="OutputVectorsPropertiesWrapper.h" />
     <ClInclude Include="Point.h" />
     <ClInclude Include="PointList.h" />
-    <ClInclude Include="PointParameters.h" />
+    <ClInclude Include="PointListWrapper.h" />
     <ClInclude Include="PointParametersWrapper.h" />
     <ClInclude Include="PointWrapper.h" />
     <ClInclude Include="PolygonProperties.h" />
@@ -158,6 +158,7 @@
     <ClInclude Include="Stdafx.h" />
     <ClInclude Include="Vector.h" />
     <ClInclude Include="VectorList.h" />
+    <ClInclude Include="VectorParametersWrapper.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
@@ -167,7 +168,7 @@
     <ClCompile Include="OutputVectorsPropertiesWrapper.cpp" />
     <ClCompile Include="Point.cpp" />
     <ClCompile Include="PointList.cpp" />
-    <ClCompile Include="PointParameters.cpp" />
+    <ClCompile Include="PointListWrapper.cpp" />
     <ClCompile Include="PointParametersWrapper.cpp" />
     <ClCompile Include="PointWrapper.cpp" />
     <ClCompile Include="PolygonProperties.cpp" />
@@ -181,6 +182,7 @@
     </ClCompile>
     <ClCompile Include="Vector.cpp" />
     <ClCompile Include="VectorList.cpp" />
+    <ClCompile Include="VectorParametersWrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />

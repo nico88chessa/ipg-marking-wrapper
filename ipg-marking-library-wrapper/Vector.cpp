@@ -14,48 +14,80 @@ using namespace ipg_marking_library_wrapper;
 
 class ipg_marking_library_wrapper::VectorPrivate {
 public:
-    msclr::auto_gcroot<ipgml::Vector^> _v;
-    GCHandle handle;
+    /*msclr::auto_gcroot<ipgml::Vector^> _v;
+    GCHandle handle;*/
+    VECTOR_HANDLER handler;
 
 public:
     VectorPrivate() {
-        _v = gcnew ipgml::Vector();
+        //_v = gcnew ipgml::Vector();
+        handler = GCHandle::ToIntPtr(GCHandle::Alloc(gcnew ipgml::Vector())).ToPointer();
     }
 
     VectorPrivate(ipgml::Point^ start, ipgml::Point^ end) {
-        _v = gcnew ipgml::Vector(start, end);
+        //_v = gcnew ipgml::Vector(start, end);
+        handler = GCHandle::ToIntPtr(GCHandle::Alloc(gcnew ipgml::Vector(start, end))).ToPointer();
     }
     
     VectorPrivate(ipgml::Vector^ other) {
-        _v.reset((ipgml::Vector^) other->Clone());
+        //_v.reset((ipgml::Vector^) other->Clone());
+        handler = GCHandle::ToIntPtr(GCHandle::Alloc(other->Clone())).ToPointer();
     }
 
     ~VectorPrivate() {
-        unlock();
+        GCHandle h = GCHandle::FromIntPtr(IntPtr(handler));
+        delete GCHandle::FromIntPtr(IntPtr(handler)).Target;
+        handler = nullptr;
+        h.Free();
     }
 
-    void* getManaged() {
-        if (!handle.IsAllocated)
-            handle = GCHandle::Alloc(_v.get());
-        IntPtr t(GCHandle::ToIntPtr(handle));
-        void* obj = t.ToPointer();
-        return obj;
+    ipgml::Vector^ operator->() const {
+        return static_cast<ipgml::Vector^>(GCHandle::FromIntPtr(IntPtr(handler)).Target);
     }
 
-    void unlock() {
-        if (handle.IsAllocated)
-            handle.Free();
+    ipgml::Vector^ get() const {
+        return static_cast<ipgml::Vector^>(GCHandle::FromIntPtr(IntPtr(handler)).Target);
     }
+
+    //void* getManaged() {
+    //    if (!handle.IsAllocated)
+    //        handle = GCHandle::Alloc(_v.get());
+    //    IntPtr t(GCHandle::ToIntPtr(handle));
+    //    void* obj = t.ToPointer();
+    //    return obj;
+    //}
+
+    //void unlock() {
+    //    if (handle.IsAllocated)
+    //        handle.Free();
+    //}
 
 };
 
+
+Vector::Vector(VECTOR_HANDLER obj) {
+    if (obj == nullptr)
+        return;
+
+    GCHandle handle = GCHandle::FromIntPtr(IntPtr(obj));
+    ipgml::Vector^ v = (ipgml::Vector^) handle.Target;
+    this->dPtr = new VectorPrivate(v);
+}
+
+CONST_VECTOR_HANDLER ipg_marking_library_wrapper::Vector::getManagedPtr() const {
+    if (dPtr == nullptr)
+        return nullptr;
+
+    return dPtr->handler;
+}
 
 Vector::Vector() {
     dPtr = new VectorPrivate();
 }
 
 Vector::Vector(const Vector& other) {
-    dPtr = new VectorPrivate(other.dPtr->_v.get());
+    ipgml::Vector^ v = other.dPtr->get();
+    dPtr = new VectorPrivate(v);
 }
 
 Vector::Vector(Vector&& other) {
@@ -63,27 +95,27 @@ Vector::Vector(Vector&& other) {
     other.dPtr = nullptr;
 }
 
-Vector::Vector(void* other) {
-    IntPtr pointer(other);
-    GCHandle handle = GCHandle::FromIntPtr(pointer);
-    ipgml::Vector^ obj = (ipgml::Vector^) handle.Target;
-    this->dPtr = new VectorPrivate(obj);
-}
+//Vector::Vector(void* other) {
+//    IntPtr pointer(other);
+//    GCHandle handle = GCHandle::FromIntPtr(pointer);
+//    ipgml::Vector^ obj = (ipgml::Vector^) handle.Target;
+//    this->dPtr = new VectorPrivate(obj);
+//}
 
 Vector::Vector(const Point& start, const Point& end) {
 
     Point startLocal(start);
     Point endLocal(end);
     
-    GCHandle hStartPoint = GCHandle::FromIntPtr(IntPtr(startLocal.getManagedPtr()));
+    /*GCHandle hStartPoint = GCHandle::FromIntPtr(IntPtr(startLocal.getManagedPtr()));
     ipgml::Point^ startManaged = (ipgml::Point^)hStartPoint.Target;
     GCHandle hEndPoint = GCHandle::FromIntPtr(IntPtr(endLocal.getManagedPtr()));
-    ipgml::Point^ endManaged = (ipgml::Point^)hEndPoint.Target;
+    ipgml::Point^ endManaged = (ipgml::Point^)hEndPoint.Target;*/
 
-    dPtr = new VectorPrivate(startManaged, endManaged);
+    //dPtr = new VectorPrivate(startManaged, endManaged);
 
-    startLocal.releaseManagedPtr();
-    endLocal.releaseManagedPtr();
+    //startLocal.releaseManagedPtr();
+    //endLocal.releaseManagedPtr();
 
 }
 
@@ -92,8 +124,12 @@ Vector::~Vector() {
 }
 
 Vector& Vector::operator=(const Vector & other) {
-    ipgml::Vector^ clonedPoint = (ipgml::Vector^)other.dPtr->_v->Clone();
-    this->dPtr->_v.reset(clonedPoint);
+    if (&other == this)
+        return *this;
+
+    delete dPtr;
+    ipgml::Vector^ v = other.dPtr->get();
+    dPtr = new VectorPrivate(v);
     return *this;
 }
 
@@ -101,16 +137,16 @@ float Vector::getLength() const {
     if (dPtr == nullptr)
         return 0.0f;
 
-    return dPtr->_v->Length;
+    return (*dPtr)->Length;
 }
 
-Point Vector::getStart() const {
+PointWrapper Vector::getStart() const {
     if (dPtr == nullptr)
-        return Point();
+        return PointWrapper();
 
-    ipgml::Point^ p = dPtr->_v->Start;
+    ipgml::Point^ p = (*dPtr)->Start;
     GCHandle handle = GCHandle::Alloc(p);
-    Point res(GCHandle::ToIntPtr(handle).ToPointer());
+    PointWrapper res(GCHandle::ToIntPtr(handle).ToPointer());
     handle.Free();
     return res;
 }
@@ -119,56 +155,53 @@ void Vector::setStart(const Point& start) {
     if (dPtr == nullptr)
         return;
 
-    Point startLocal(start);
-    GCHandle hStartPoint = GCHandle::FromIntPtr(IntPtr(startLocal.getManagedPtr()));
-    ipgml::Point^ startManaged = (ipgml::Point^)hStartPoint.Target;
-    dPtr->_v->Start = startManaged;
-    startLocal.releaseManagedPtr();
+    GCHandle hStartPoint = GCHandle::FromIntPtr(IntPtr(const_cast<POINT_HANDLER>(start.getManagedPtr())));
+    ipgml::Point^ startManaged = (ipgml::Point^) hStartPoint.Target;
+    (*dPtr)->Start = startManaged;
 }
 
-Point Vector::getEnd() const {
-    if (dPtr == nullptr)
-        return Point();
+PointWrapper Vector::getEnd() const {
 
-    ipgml::Point^ p = dPtr->_v->End;
+    if (dPtr == nullptr)
+        return PointWrapper();
+
+    ipgml::Point^ p = (*dPtr)->End;
     GCHandle handle = GCHandle::Alloc(p);
-    Point res(GCHandle::ToIntPtr(handle).ToPointer());
+    PointWrapper res(GCHandle::ToIntPtr(handle).ToPointer());
     handle.Free();
     return res;
 }
 
-void Vector::setEnd(const Point & end) {
+void Vector::setEnd(const Point& end) {
     if (dPtr == nullptr)
         return;
 
-    Point endLocal(end);
-    GCHandle hEndPoint = GCHandle::FromIntPtr(IntPtr(endLocal.getManagedPtr()));
-    ipgml::Point^ endManaged = (ipgml::Point^)hEndPoint.Target;
-    dPtr->_v->End = endManaged;
-    endLocal.releaseManagedPtr();
+    GCHandle hEndPoint = GCHandle::FromIntPtr(IntPtr(const_cast<POINT_HANDLER>(end.getManagedPtr())));
+    ipgml::Point^ endManaged = (ipgml::Point^) hEndPoint.Target;
+    (*dPtr)->End = endManaged;
 }
 
-void* Vector::getManagedPtr() {
-    
-    if (dPtr == nullptr)
-        return nullptr;
-
-    void* obj = dPtr->getManaged();
-    return obj;
-    
-}
-
-void Vector::releaseManagedPtr() {
-    dPtr->unlock();
-}
+//void* Vector::getManagedPtr() {
+//    
+//    if (dPtr == nullptr)
+//        return nullptr;
+//
+//    void* obj = dPtr->getManaged();
+//    return obj;
+//    
+//}
+//
+//void Vector::releaseManagedPtr() {
+//    dPtr->unlock();
+//}
 
 int Vector::getPointsPerVector() {
     return ipgml::Vector::PointsPerVector;
 }
 
 std::ostream& ipg_marking_library_wrapper::operator<<(std::ostream& os, const Vector & obj) {
-    Point& start = obj.getStart();
-    Point& end = obj.getEnd();
+    PointWrapper start = obj.getStart();
+    PointWrapper end = obj.getEnd();
     /*return os << "Vector Start (" << start.getX() << "; " << start.getY() << ") - " << \
         "End (" << end.getX() << "; " << end.getY() << ")" << std::endl;*/
     return os << "Start " << start << " - End " << end;

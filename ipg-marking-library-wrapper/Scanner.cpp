@@ -82,17 +82,17 @@ Scanner::~Scanner() {
     delete dPtr;
 }
 
-void* Scanner::getManagedPtr() {
-    if (dPtr == nullptr)
-        return nullptr;
-
-    void* obj = dPtr->getManaged();
-    return obj;
-}
-
-void Scanner::releaseManagedPtr() { 
-    dPtr->unlock();
-}
+//void* Scanner::getManagedPtr() {
+//    if (dPtr == nullptr)
+//        return nullptr;
+//
+//    void* obj = dPtr->getManaged();
+//    return obj;
+//}
+//
+//void Scanner::releaseManagedPtr() { 
+//    dPtr->unlock();
+//}
 
 void Scanner::close() {
     if (dPtr == nullptr)
@@ -189,14 +189,13 @@ void Scanner::lock() {
 
 void Scanner::output(PointList& list) {
 
-    GCHandle handle = GCHandle::FromIntPtr(IntPtr(list.getManagedPtr()));
+    GCHandle handle = GCHandle::FromIntPtr(IntPtr(const_cast<POINTLIST_HANDLER>(list.getManagedPtr())));
     ipgml::PointList^ obj = (ipgml::PointList^)handle.Target;
     
     try {
         dPtr->_s->Output(obj);
     } catch (ipgml::LibraryException^ e) {
 
-        list.releaseManagedPtr();
         System::String^ managedMessage = e->Message;
         msclr::interop::marshal_context context;
         std::string message = context.marshal_as<std::string>(managedMessage);
@@ -204,23 +203,19 @@ void Scanner::output(PointList& list) {
 
     }
     
-    list.releaseManagedPtr();
-
 }
 
 void Scanner::output(PointList& list, OutputPointsProperties& properties) {
 
-    GCHandle handleList = GCHandle::FromIntPtr(IntPtr(list.getManagedPtr()));
+    GCHandle handleList = GCHandle::FromIntPtr(IntPtr(const_cast<POINTLIST_HANDLER>(list.getManagedPtr())));
     GCHandle handleProp = GCHandle::FromIntPtr(IntPtr(properties.getManagedPtr()));
     ipgml::PointList^ l = (ipgml::PointList^)handleList.Target;
     ipgml::OutputPointsProperties^ p = (ipgml::OutputPointsProperties^)handleProp.Target;
     
     try {
         dPtr->_s->Output(l, p);
-        list.releaseManagedPtr();
     } catch (ipgml::LibraryException^ e) {
 
-        list.releaseManagedPtr();
         properties.releaseManagedPtr();
         System::String^ managedMessage = e->Message;
         msclr::interop::marshal_context context;
@@ -232,18 +227,18 @@ void Scanner::output(PointList& list, OutputPointsProperties& properties) {
 
 }
 
-void Scanner::output(VectorList & list) {
+void Scanner::output(VectorList& list) {
 
-    GCHandle handle = GCHandle::FromIntPtr(IntPtr(list.getManagedPtr()));
+    GCHandle handle = GCHandle::FromIntPtr(IntPtr(const_cast<VECTORLIST_HANDLER>(list.getManagedPtr())));
     ipgml::VectorList^ obj = (ipgml::VectorList^) handle.Target;
 
     try {
         dPtr->_s->Output(obj);
-        list.releaseManagedPtr();
+        //list.releaseManagedPtr();
     
     } catch (ipgml::LibraryException^ e) {
 
-        list.releaseManagedPtr();
+        //list.releaseManagedPtr();
         System::String^ managedMessage = e->Message;
         msclr::interop::marshal_context context;
         std::string message = context.marshal_as<std::string>(managedMessage);
@@ -253,20 +248,21 @@ void Scanner::output(VectorList & list) {
 
 }
 
-void Scanner::output(VectorList & list, OutputVectorsProperties& properties) {
+void Scanner::output(VectorList& list, OutputVectorsProperties& properties) {
 
-    GCHandle handleList = GCHandle::FromIntPtr(IntPtr(list.getManagedPtr()));
+    //GCHandle handleList = GCHandle::FromIntPtr(IntPtr(list.getManagedPtr()));
+    GCHandle handleList = GCHandle::FromIntPtr(IntPtr(const_cast<VECTORLIST_HANDLER>(list.getManagedPtr())));
     GCHandle handleProp = GCHandle::FromIntPtr(IntPtr(properties.getManagedPtr()));
     ipgml::VectorList^ vl = (ipgml::VectorList^) handleList.Target;
     ipgml::OutputVectorsProperties^ p = (ipgml::OutputVectorsProperties^)handleProp.Target;
 
     try {
         dPtr->_s->Output(vl, p);
-        list.releaseManagedPtr();
+        //list.releaseManagedPtr();
     }
     catch (ipgml::LibraryException^ e) {
 
-        list.releaseManagedPtr();
+        //list.releaseManagedPtr();
         properties.releaseManagedPtr();
         System::String^ managedMessage = e->Message;
         msclr::interop::marshal_context context;
@@ -437,6 +433,26 @@ void Scanner::park(const Point& p) {
 
     }
      
+}
+
+PointParametersWrapper Scanner::getPointParameters() {
+ 
+    ipgml::PointParameters^ p = dPtr->_s->PointParameters;
+    GCHandle handle = GCHandle::Alloc(p);
+    PointParametersWrapper res(GCHandle::ToIntPtr(handle).ToPointer());
+    handle.Free();
+    return res;  // copy elided
+
+}
+
+VectorParametersWrapper Scanner::getVectorParameters() {
+    
+    ipgml::VectorParameters^ p = dPtr->_s->VectorParameters;
+    GCHandle handle = GCHandle::Alloc(p);
+    VectorParametersWrapper res(GCHandle::ToIntPtr(handle).ToPointer());
+    handle.Free();
+    return res;  // copy elided
+
 }
 
 void Scanner::laser(LaserAction l) {
