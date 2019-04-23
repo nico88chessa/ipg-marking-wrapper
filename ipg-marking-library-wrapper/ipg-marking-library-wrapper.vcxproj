@@ -159,6 +159,7 @@
     <ClInclude Include="Vector.h" />
     <ClInclude Include="VectorList.h" />
     <ClInclude Include="VectorParametersWrapper.h" />
+    <ClInclude Include="VectorWrapper.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
@@ -183,6 +184,7 @@
     <ClCompile Include="Vector.cpp" />
     <ClCompile Include="VectorList.cpp" />
     <ClCompile Include="VectorParametersWrapper.cpp" />
+    <ClCompile Include="VectorWrapper.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />

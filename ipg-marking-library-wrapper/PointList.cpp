@@ -221,6 +221,29 @@ void PointList::rotate(float x, float y, float z) {
     (*dPtr)->Rotate(x, y, z);
 }
 
+std::list<PointWrapper> PointList::points() {
+
+    if (this->dPtr == nullptr)
+        return std::list<PointWrapper>();
+
+    std::list<PointWrapper> list;
+    
+    int size = this->count();
+    for (int i = 0; i < size; ++i) {
+        list.push_back(this->element(i));
+    }
+    return list;
+}
+
+void PointList::addPoint(const Point& p) {
+
+    CONST_POINT_HANDLER ph = p.getManagedPtr();
+    GCHandle handle = GCHandle::FromIntPtr(IntPtr(const_cast<POINT_HANDLER>(ph)));
+    ipgml::Point^ pManaged = (ipgml::Point^) handle.Target;
+    (*dPtr)->points->Add(pManaged);
+
+}
+
 //void* PointList::getManagedPtr() {
 //    if (dPtr == nullptr)
 //        return nullptr;

@@ -151,13 +151,13 @@ int VectorList::count() const {
     return (*dPtr)->Count;
 }
 
-Vector VectorList::element(int i) const {
+VectorWrapper VectorList::element(int i) const {
 
     try {
 
         ipgml::Vector^ v = (*dPtr)->Element(i); // qui la dll torna un reference
         GCHandle handle = GCHandle::Alloc(v);               // nessuna copia del vettore, punto allo stesso oggetto (reference)
-        Vector res(GCHandle::ToIntPtr(handle).ToPointer());  // nessuna copia del vettore, punto allo stesso oggetto (reference)
+        VectorWrapper res(GCHandle::ToIntPtr(handle).ToPointer());  // nessuna copia del vettore, punto allo stesso oggetto (reference)
         handle.Free();
         return res;
 
@@ -170,7 +170,7 @@ Vector VectorList::element(int i) const {
 
     }
 
-    return Vector();
+    return VectorWrapper();
 
 }
 
@@ -202,6 +202,29 @@ void VectorList::rotate(float x, float y, float z) {
     if (this->dPtr == nullptr)
         return;
     (*dPtr)->Rotate(x, y, z);
+}
+
+std::list<VectorWrapper> VectorList::vectors() {
+
+    if (this->dPtr == nullptr)
+        return std::list<VectorWrapper>();
+
+    std::list<VectorWrapper> list;
+
+    int size = this->count();
+    for (int i = 0; i < size; ++i) {
+        list.push_back(this->element(i));
+    }
+    return list;
+}
+
+void VectorList::addVector(const Vector& v) {
+
+    CONST_POINT_HANDLER ph = v.getManagedPtr();
+    GCHandle handle = GCHandle::FromIntPtr(IntPtr(const_cast<POINT_HANDLER>(ph)));
+    ipgml::Vector^ vManaged = (ipgml::Vector^) handle.Target;
+    (*dPtr)->vectors->Add(vManaged);
+
 }
 
 Point VectorList::center() const {

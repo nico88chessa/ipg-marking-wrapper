@@ -4,6 +4,7 @@
 #include <msclr/auto_gcroot.h>
 
 #include "Vector.h"
+#include "VectorWrapper.h"
 
 using namespace System;
 using namespace System::Runtime::InteropServices;
@@ -104,18 +105,12 @@ Vector::Vector(Vector&& other) {
 
 Vector::Vector(const Point& start, const Point& end) {
 
-    Point startLocal(start);
-    Point endLocal(end);
-    
-    /*GCHandle hStartPoint = GCHandle::FromIntPtr(IntPtr(startLocal.getManagedPtr()));
-    ipgml::Point^ startManaged = (ipgml::Point^)hStartPoint.Target;
-    GCHandle hEndPoint = GCHandle::FromIntPtr(IntPtr(endLocal.getManagedPtr()));
-    ipgml::Point^ endManaged = (ipgml::Point^)hEndPoint.Target;*/
+    GCHandle hStartPoint = GCHandle::FromIntPtr(IntPtr(const_cast<POINT_HANDLER>(start.getManagedPtr())));
+    ipgml::Point^ startManaged = (ipgml::Point^) hStartPoint.Target;
+    GCHandle hEndPoint = GCHandle::FromIntPtr(IntPtr(const_cast<POINT_HANDLER>(end.getManagedPtr())));
+    ipgml::Point^ endManaged = (ipgml::Point^) hEndPoint.Target;
 
-    //dPtr = new VectorPrivate(startManaged, endManaged);
-
-    //startLocal.releaseManagedPtr();
-    //endLocal.releaseManagedPtr();
+    dPtr = new VectorPrivate(startManaged, endManaged);
 
 }
 
@@ -131,6 +126,19 @@ Vector& Vector::operator=(const Vector & other) {
     ipgml::Vector^ v = other.dPtr->get();
     dPtr = new VectorPrivate(v);
     return *this;
+}
+
+Vector& Vector::operator=(Vector && other) {
+    if (this == &other)
+        return *this;
+    delete dPtr;
+    this->dPtr = other.dPtr;
+    other.dPtr = nullptr;
+    return *this;
+}
+
+Vector::operator VectorWrapper() const {
+    return VectorWrapper(const_cast<VECTOR_HANDLER>(this->getManagedPtr()));
 }
 
 float Vector::getLength() const {
@@ -204,5 +212,5 @@ std::ostream& ipg_marking_library_wrapper::operator<<(std::ostream& os, const Ve
     PointWrapper end = obj.getEnd();
     /*return os << "Vector Start (" << start.getX() << "; " << start.getY() << ") - " << \
         "End (" << end.getX() << "; " << end.getY() << ")" << std::endl;*/
-    return os << "Start " << start << " - End " << end;
+    return os << "Vector: Start " << start << " - End " << end;
 }
