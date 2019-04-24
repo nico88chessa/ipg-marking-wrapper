@@ -287,7 +287,7 @@ std::vector<ScannerInfo> Scanner::scanners() {
 
         switch (p->ConnectionStatus) {
         case ipgml::ConnectionStatus::Available: c = ConnectionStatus::AVAILABLE; break;
-        case ipgml::ConnectionStatus::Busy: ConnectionStatus::BUSY; break;
+        case ipgml::ConnectionStatus::Busy: c = ConnectionStatus::BUSY; break;
         }
         const char* chars = (const char*)(Marshal::StringToHGlobalAnsi(p->name)).ToPointer();
         name = chars;
