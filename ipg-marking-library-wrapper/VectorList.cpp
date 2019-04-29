@@ -111,11 +111,11 @@ VectorList::VectorList(VectorList&& other) {
 
 VectorList::VectorList(const PolygonProperties& polygonProperties) {
 
-    ipgml::PolygonProperties^ managedPolygonProperties = gcnew ipgml::PolygonProperties(
-        (int)polygonProperties.getNumberOfSides(),
-        polygonProperties.getRadius());
-    
-    dPtr = new VectorListPrivate(managedPolygonProperties);
+    CONST_POLYGONPROPERTIES_HANDLER pph = polygonProperties.getManagedPtr();
+    GCHandle handle = GCHandle::FromIntPtr(IntPtr(const_cast<POINT_HANDLER>(pph)));
+    ipgml::PolygonProperties^ ppManaged = (ipgml::PolygonProperties^) handle.Target;
+
+    dPtr = new VectorListPrivate(ppManaged);
 
 }
 

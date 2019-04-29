@@ -14,23 +14,16 @@ using namespace ipg_marking_library_wrapper;
 
 class ipg_marking_library_wrapper::PolygonPropertiesPrivate {
 public:
-    /*msclr::auto_gcroot<ipgml::PolygonProperties^> _pp;
-    GCHandle handle;*/
     POLYGONPROPERTIES_HANDLER handler;
 
 public:
     PolygonPropertiesPrivate(int numberOfSides, float radius) {
-        //_pp = gcnew ipgml::PolygonProperties(numberOfSides, radius);
         handler = GCHandle::ToIntPtr(GCHandle::Alloc(
             gcnew ipgml::PolygonProperties(numberOfSides, radius))).ToPointer();
     }
 
     ~PolygonPropertiesPrivate() {
-        //unlock();
         GCHandle h = GCHandle::FromIntPtr(IntPtr(handler));
-        /*if (h.Equals(test)) {
-        std::cout << "Yeah sono uguali";
-        }*/
         delete GCHandle::FromIntPtr(IntPtr(handler)).Target;
         handler = nullptr;
         h.Free();
@@ -43,18 +36,6 @@ public:
     ipgml::PolygonProperties^ get() const {
         return static_cast<ipgml::PolygonProperties^>(GCHandle::FromIntPtr(IntPtr(handler)).Target);
     }
-
-    /*void* getManaged() {
-        if (!handle.IsAllocated)
-            handle = GCHandle::Alloc(_pp.get());
-        void* obj = GCHandle::ToIntPtr(handle).ToPointer();
-        return obj;
-    }
-
-    void unlock() {
-        if (handle.IsAllocated)
-            handle.Free();
-    }*/
 
 };
 
@@ -79,17 +60,12 @@ float PolygonProperties::getRadius() const {
     return (*dPtr)->Radius;
 }
 
-//void* PolygonProperties::getManagedPtr() {
-//    if (dPtr == nullptr)
-//        return nullptr;
-//
-//    void* obj = dPtr->getManaged();
-//    return obj;
-//}
-//
-//void PolygonProperties::releaseManagedPtr() {
-//    dPtr->unlock();
-//}
+CONST_POLYGONPROPERTIES_HANDLER PolygonProperties::getManagedPtr() const {
+    if (dPtr == nullptr)
+        return nullptr;
+
+    return dPtr->handler;
+}
 
 std::ostream& ipg_marking_library_wrapper::operator<<(std::ostream& os, const PolygonProperties& obj) {
     return os << "PolygonProperties - N.sides: " << obj.getNumberOfSides() << "; radius: " << obj.getRadius();

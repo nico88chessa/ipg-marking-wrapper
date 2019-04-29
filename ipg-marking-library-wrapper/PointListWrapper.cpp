@@ -6,21 +6,9 @@
 
 #include "PointList.h"
 #include "LibraryException.h"
-
-
-using namespace System;
-using namespace System::Runtime::InteropServices;
-namespace ipgml = IpgMarkingGraphicsLibrary;
-
-using namespace ipg_marking_library_wrapper;
-
-
-#using "ipg/IpgMarkingGraphicsLibrary.dll"
-
-#include "stdafx.h"
 #include <msclr/gcroot.h>
-
 #include "PointListWrapper.h"
+
 
 using namespace System;
 using namespace System::Runtime::InteropServices;
