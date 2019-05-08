@@ -37,6 +37,11 @@ public:
         handler = GCHandle::ToIntPtr(GCHandle::Alloc(gcnew ipgml::VectorList(polygonProperties))).ToPointer();
     }
 
+    VectorListPrivate(ipgml::BoxProperties^ boxProperties) {
+        //_vl = gcnew ipgml::VectorList(polygonProperties);
+        handler = GCHandle::ToIntPtr(GCHandle::Alloc(gcnew ipgml::VectorList(boxProperties))).ToPointer();
+    }
+
     //VectorListPrivate(ipgml::VectorList^ other) {
     //    //_vl = other;
     //}
@@ -116,6 +121,16 @@ VectorList::VectorList(const PolygonProperties& polygonProperties) {
     ipgml::PolygonProperties^ ppManaged = (ipgml::PolygonProperties^) handle.Target;
 
     dPtr = new VectorListPrivate(ppManaged);
+
+}
+
+VectorList::VectorList(const BoxProperties& boxProperties) {
+
+    CONST_BOXPROPERTIES_HANDLER pph = boxProperties.getManagedPtr();
+    GCHandle handle = GCHandle::FromIntPtr(IntPtr(const_cast<POINT_HANDLER>(pph)));
+    ipgml::BoxProperties^ bpManaged = (ipgml::BoxProperties^) handle.Target;
+
+    dPtr = new VectorListPrivate(bpManaged);
 
 }
 
@@ -202,6 +217,24 @@ void VectorList::rotate(float x, float y, float z) {
     if (this->dPtr == nullptr)
         return;
     (*dPtr)->Rotate(x, y, z);
+}
+
+void VectorList::reverseOrder() {
+    if (this->dPtr == nullptr)
+        return;
+    (*dPtr)->ReverseOrder();
+}
+
+void VectorList::scale(float scaleFactor) {
+    if (this->dPtr == nullptr)
+        return;
+    (*dPtr)->Scale(scaleFactor);
+}
+
+void VectorList::scale(float x, float y, float z) {
+    if (this->dPtr == nullptr)
+        return;
+    (*dPtr)->Scale(x, y, z);
 }
 
 std::list<VectorWrapper> VectorList::vectors() {

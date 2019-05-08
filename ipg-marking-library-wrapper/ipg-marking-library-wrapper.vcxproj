@@ -139,6 +139,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BoxProperties.h" />
     <ClInclude Include="Enums.h" />
     <ClInclude Include="IpgmlDef.h" />
     <ClInclude Include="LibraryException.h" />
@@ -163,6 +164,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
+    <ClCompile Include="BoxProperties.cpp" />
     <ClCompile Include="OutputPointsProperties.cpp" />
     <ClCompile Include="OutputPointsPropertiesWrapper.cpp" />
     <ClCompile Include="OutputVectorsProperties.cpp" />
